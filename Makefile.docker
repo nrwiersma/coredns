@@ -59,6 +59,23 @@ endif
 			cp Dockerfile build/docker/$${arch} ; \
 	done
 
+.PHONY: image-from-release
+image-from-release:
+ifeq ($(VERSION),)
+	$(error "Please specify a version use. Use VERSION=<version>")
+endif
+
+	@rm -rf build/docker
+	@mkdir -p build/docker
+	@# 1. Copy appropriate coredns binary to build/docker/<arch>
+	@# 2. Copy Dockerfile into the correct dir as well.
+	@# 3. Unpack the tgz from github into 'coredns' binary.
+	for arch in $(LINUX_ARCH); do \
+		mkdir build/docker/$${arch}; \
+            cp build/linux/$${arch}/* build/docker/$${arch}; \
+			cp Dockerfile build/docker/$${arch} ; \
+	done
+
 .PHONY: docker-build
 docker-build:
 ifeq ($(DOCKER),)
@@ -79,7 +96,6 @@ else
 	@# Pushes coredns/coredns-$arch:$version images
 	@# Creates manifest for multi-arch image
 	@# Pushes multi-arch image to coredns/coredns:$version
-	@echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_LOGIN) --password-stdin
 	@echo Pushing: $(VERSION) to $(DOCKER_IMAGE_NAME)
 	for arch in $(LINUX_ARCH); do \
 		docker push $(DOCKER_IMAGE_NAME)-$${arch}:$(VERSION) ;\
